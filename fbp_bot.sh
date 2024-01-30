@@ -304,8 +304,8 @@ if [ -z "$go" ]; then
 					next-qwery;
 					end_of_the_movie;
 					MADDR=$(sed -n 20"p" $fhome"sett.conf" | tr -d '\r')
-					MSUBJ="Вопрос-Другое-131-MIxVel_fbp_bot  "$username" chat:"$chat_id
-					MBODY=$(cat $fhome"/qw_old/"$chat_id"_"$date1".txt" | sed 's,$,\\n,'| sed 's/\"//g' | tr -d '\r\n')
+					MSUBJ="MIxVel_fbp_bot: Вопрос от пользователя "$username" chat:"$chat_id
+					MBODY=$text
 					smail;
 					#go3="ok"
 				fi
