@@ -22,9 +22,7 @@ ttoken=$(sed -n 1"p" $fhome"sett.conf" | tr -d '\r')
 ttime=$(sed -n 2"p" $fhome"sett.conf" | tr -d '\r')
 proxy=$(sed -n 3"p" $fhome"sett.conf" | tr -d '\r')
 bui=$(sed -n 5"p" $fhome"sett.conf" | tr -d '\r')
-
-customer=$(sed -n 15"p" $fhome"sett.conf" | tr -d '\r')
-[ "$(echo $customer | sed 's/^[ \t]*//;s/[ \t]*$//' )" == "" ] && customer="tg_fbp_bot@yandex.ru"
+customer=$(sed -n 18"p" $fhome"sett.conf" | tr -d '\r')
 
 zammad_endpoint=$(sed -n 8"p" $fhome"sett.conf" | tr -d '\r')
 zammad_user=$(sed -n 9"p" $fhome"sett.conf" | tr -d '\r')

@@ -28,6 +28,7 @@ proxy=$(sed -n 3"p" $fhome"sett.conf" | tr -d '\r')
 ssec1=$(sed -n 4"p" $fhome"sett.conf" | tr -d '\r')
 bui=$(sed -n 5"p" $fhome"sett.conf" | tr -d '\r')
 progons=$(sed -n 6"p" $fhome"sett.conf" | tr -d '\r')
+kartinka=$(sed -n 15"p" $fhome"sett.conf" | tr -d '\r')
 
 	smtp_hostname=$(sed -n 16"p" $fhome"sett.conf" | tr -d '\r')
 	smtp_sport=$(sed -n 17"p" $fhome"sett.conf" | tr -d '\r')
@@ -162,12 +163,22 @@ echo "token="$token
 echo "chat_id="$chat_id
 echo $text
 
-if ! [ -z "$text" ]; then
+if [ -z "$kartinka" ]; then
+  if ! [ -z "$text" ]; then
 	if [ -z "$proxy" ]; then
 		curl -k -m 8 -L -X POST https://api.telegram.org/bot$token/sendMessage -d chat_id="$chat_id" -d 'parse_mode=HTML' --data-urlencode "text="$text 1>$fhome"out2.txt" 2>$fhome"out2_err.txt"
 	else
 		curl -k -m 8 --proxy $proxy -L -X POST https://api.telegram.org/bot$token/sendMessage -d chat_id="$chat_id" -d 'parse_mode=HTML' --data-urlencode "text="$text 1>$fhome"out2.txt" 2>$fhome"out2_err.txt"
 	fi
+  fi
+else
+  if ! [ -z "$text" ]; then
+	if [ -z "$proxy" ]; then
+		curl -k -m 8 -L -X POST https://api.telegram.org/bot$token/sendMessage -d chat_id="$chat_id" -d 'parse_mode=HTML' --data-urlencode "text="$kartinka" "$text 1>$fhome"out2.txt" 2>$fhome"out2_err.txt"
+	else
+		curl -k -m 8 --proxy $proxy -L -X POST https://api.telegram.org/bot$token/sendMessage -d chat_id="$chat_id" -d 'parse_mode=HTML' --data-urlencode "text="$kartinka" "$text 1>$fhome"out2.txt" 2>$fhome"out2_err.txt"
+	fi
+  fi
 fi
 
 unset IFS
