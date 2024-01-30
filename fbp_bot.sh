@@ -279,7 +279,7 @@ if [ -z "$go" ]; then
 			fi
 		fi
 		if [ "$qw_num" == "1_2_2" ]; then
-			min-col-str 4 400
+			min-col-str 4 401
 			if [ "$go2" == "ok" ]; then
 				check_mail_in_txt;
 				if [ "$go4" == "ok" ]; then		#кАнец фильмА
@@ -295,7 +295,7 @@ if [ -z "$go" ]; then
 		fi
 		
 		if [ "$qw_num" == "1_3" ]; then
-			min-col-str 4 400
+			min-col-str 4 401
 			if [ "$go2" == "ok" ]; then
 				check_mail_in_txt;
 				if [ "$go4" == "ok" ]; then		#кАнец фильмА
@@ -344,7 +344,7 @@ if [ -z "$go" ]; then
 			fi
 		fi
 		if [ "$qw_num" == "1_1_1_1_2" ]; then
-			min-col-str 4 400
+			min-col-str 4 401
 			if [ "$go2" == "ok" ]; then			#кАнец фильмА
 				new_qw_num="1_1_1_1_2_1"
 				config=$qchat_file
@@ -379,7 +379,7 @@ if [ -z "$go" ]; then
 			fi
 		fi
 		if [ "$qw_num" == "1_1_1_2_1" ]; then
-			min-col-str 4 400
+			min-col-str 4 401
 			if [ "$go2" == "ok" ]; then
 				check_mail_in_txt;
 				if [ "$go4" == "ok" ]; then		#кАнец фильмА
