@@ -767,7 +767,7 @@ sleep $ttime
 tinp_ok1=$tinp_ok
 input;
 [ "$tinp_ok" -gt "$tinp_ok1" ] && parce;
-[ "$i" -gt "50" ] && upd_id1=$upd_id
+[ "$i" -gt "20" ] && upd_id1=$upd_id
 
 
 #возврат каретки
