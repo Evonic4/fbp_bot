@@ -29,9 +29,36 @@ ssec1=$(sed -n 4"p" $fhome"sett.conf" | tr -d '\r')
 bui=$(sed -n 5"p" $fhome"sett.conf" | tr -d '\r')
 progons=$(sed -n 6"p" $fhome"sett.conf" | tr -d '\r')
 
+	smtp_hostname=$(sed -n 16"p" $fhome"sett.conf" | tr -d '\r')
+	smtp_sport=$(sed -n 17"p" $fhome"sett.conf" | tr -d '\r')
+	smtp_user=$(sed -n 18"p" $fhome"sett.conf" | tr -d '\r')
+	smtp_pass=$(sed -n 19"p" $fhome"sett.conf" | tr -d '\r')
+	! [ "$smtp_hostname" == "" ] && ! [ "$smtp_sport" == "" ] && ! [ "$smtp_user" == "" ] && ! [ "$smtp_pass" == "" ] && smtp_content;
+
 kkik=0
 
-integrity;		#только под рутом(
+#integrity;		#только под рутом(
+}
+
+
+smtp_content()
+{
+logger "smtp_content"
+echo "hostname="$smtp_hostname > /etc/ssmtp/ssmtp.conf
+echo "FromLineOverride=NO" >> /etc/ssmtp/ssmtp.conf
+echo "AuthUser="$smtp_user >> /etc/ssmtp/ssmtp.conf
+echo "AuthPass="$smtp_pass >> /etc/ssmtp/ssmtp.conf
+echo "AuthMethod=LOGIN" >> /etc/ssmtp/ssmtp.conf
+echo "mailhub="$smtp_sport >> /etc/ssmtp/ssmtp.conf
+echo "rewriteDomain="$smtp_hostname >> /etc/ssmtp/ssmtp.conf
+echo "UseTLS=YES" >> /etc/ssmtp/ssmtp.conf
+echo "Debug=YES" >> /etc/ssmtp/ssmtp.conf
+echo "TLS_CA_File=/etc/ssl/certs/ca-certificates.crt" >> /etc/ssmtp/ssmtp.conf
+chmod 640 /etc/ssmtp/ssmtp.conf
+
+echo "root:"$smtp_user":"$smtp_sport > /etc/ssmtp/revaliases
+echo "monitoring:"$smtp_user":"$smtp_sport >> /etc/ssmtp/revaliases
+chmod 640 /etc/ssmtp/ssmtp.conf
 }
 
 
@@ -42,17 +69,19 @@ logger "integrity<<<<<<<<<<<<<<<<<<<"
 
 local fbp=""
 local trbp=""
-#fbp=$(ps af | grep $(sed -n 1"p" $fhome"fbp_bot_pid.txt" | tr -d '\r') | grep abot3.sh | awk '{ print $1 }')
-#trbp=$(ps af | grep $(sed -n 1"p" $fhome"zammad_ct_pid.txt" | tr -d '\r') | grep zammad_ct.sh | awk '{ print $1 }')
+local tzap=""
+
 fbp=$(ps axu| awk '{ print $2 }' | grep $(sed -n 1"p" $fhome"fbp_bot_pid.txt"))
 trbp=$(ps axu| awk '{ print $2 }' | grep $(sed -n 1"p" $fhome"zammad_ct_pid.txt"))
+tzap=$(ps axu| awk '{ print $2 }' | grep $(sed -n 1"p" $fhome"zapushgateway_pid.txt"))
 
 logger "fbp="$fbp
 logger "trbp="$trbp
+logger "tzap="$tzap
 
 [ -z "$fbp" ] && logger "starter fbp_bot.sh" && $fhome"fbp_bot.sh" &
 [ -z "$trbp" ] && logger "starter zammad_ct.sh" && $fhome"zammad_ct.sh" &
-
+[ -z "$trbp" ] && logger "starter zapushgateway.sh" && $fhome"zapushgateway.sh" &
 }
 
 
@@ -79,34 +108,23 @@ for (( i=1;i<=$str_col;i++)); do
 test=$(sed -n $i"p" $sender_list | tr -d '\r')
 logger "sender str_col>0"
 
-#logger "sender test="$test
-Z1="0"
-Z2="0"
-code1=""
-code2=""
 mess_path=$(sed -n "1p" $test | tr -d '\r')							#путь к мессаджу
 chat_id=$(sed -n "2p" $test | sed 's/z/-/g'| tr -d '\r')			#chat_id
-#bic1=$(sed -n "2p" $test | tr -d '\r')				#спец картинок в уведомлениях 0-2
-#styc1=$(sed -n "3p" $test | tr -d '\r')				#показ спец картинок severity 0-6
-#url1=$(sed -n "4p" $test | tr -d '\r')				#урл
-#muter=$(sed -n "5p" $test | tr -d '\r')				#mute
+
+logger "sender mess_path="$mess_path
+logger "sender chat_id="$chat_id
+logger "sender test="$test
 	
 if ! [ -z "$test" ] && ! [ -z "$mess_path" ]; then
-	logger "sender mess_path="$mess_path
-	logger "sender test="$test
-	
 	directly
 	
 	#statistic
 	if [ "$(cat $fhome"out2.txt" | grep "\"ok\":true,")" ]; then	
-		sendok=$((sendok+1))
-		logger "send OK "$sendok
+		logger "send OK "
 		rm -f $test
 		rm -f $mess_path
 	else
-		errc=$(grep "curl" $fhome"out2_err.txt")
-		senderr=$((senderr+1))
-		logger "send ERROR "$senderr":   "$errc
+		logger "send ERROR "
 	fi
 fi
 

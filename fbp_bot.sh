@@ -1,13 +1,12 @@
 #!/bin/bash
 export PATH="$PATH:/bin:/sbin:/usr/bin:/usr/sbin:/usr/local/bin:/usr/local/sbin"
-ver="v0.1"
+ver="v0.2"
 
 fhome=/usr/share/fbp_bot/
 fhsender=$fhome"sender/"
 fhsender1=$fhsender"1/"
 fhsender2=$fhsender"2/"
-qchat_file=$fhome"qchat.txt"	#файл с содержимым по номеру вопроса и чата чат:номер вопроса
-qchat_file1=$fhome"qchat1.txt"
+qchat_file=$fhome"qchat.txt"		#файл с содержимым по номеру вопроса и чата чат:номер вопроса
 ! [ -f $fhome"sett.conf" ] && cp -f $fhome"settings.conf" $fhome"sett.conf"
 lev_log=$(sed -n 7"p" $fhome"sett.conf" | tr -d '\r')
 starten=1
@@ -23,16 +22,22 @@ ttoken=$(sed -n 1"p" $fhome"sett.conf" | tr -d '\r')
 ttime=$(sed -n 2"p" $fhome"sett.conf" | tr -d '\r')
 proxy=$(sed -n 3"p" $fhome"sett.conf" | tr -d '\r')
 bui=$(sed -n 5"p" $fhome"sett.conf" | tr -d '\r')
-progons=$(sed -n 6"p" $fhome"sett.conf" | tr -d '\r')
+
+customer=$(sed -n 15"p" $fhome"sett.conf" | tr -d '\r')
+[ "$(echo $customer | sed 's/^[ \t]*//;s/[ \t]*$//' )" == "" ] && customer="tg_fbp_bot@yandex.ru"
 
 zammad_endpoint=$(sed -n 8"p" $fhome"sett.conf" | tr -d '\r')
 zammad_user=$(sed -n 9"p" $fhome"sett.conf" | tr -d '\r')
 zammad_pass=$(sed -n 10"p" $fhome"sett.conf" | tr -d '\r')
 zammad_btocken=$(sed -n 11"p" $fhome"sett.conf" | tr -d '\r')
 
+	smtp_hostname=$(sed -n 16"p" $fhome"sett.conf" | tr -d '\r')
+	smtp_sport=$(sed -n 17"p" $fhome"sett.conf" | tr -d '\r')
+	smtp_user=$(sed -n 18"p" $fhome"sett.conf" | tr -d '\r')
+	smtp_pass=$(sed -n 19"p" $fhome"sett.conf" | tr -d '\r')
 
-col_qw=$(grep -c "" $fhome"questions.txt")
-kkik=0
+#col_qw=$(grep -c "" $fhome"questions.txt")
+
 tinp_ok=0
 tinp_err=0
 i=0
@@ -41,60 +46,64 @@ i=0
 
 function logger()
 {
-local date1=$(date '+ %Y-%m-%d %H:%M:%S')
-echo $date1" fbp-bot_"$bui": "$1
+local date4=$(date '+ %Y-%m-%d %H:%M:%S')
+echo $date4" fbp-bot_"$bui": "$1
 }
 
 
 
 to-config ()
 {
-logger "roborob to-config mi_num="$mi_num
+logger "to-config chat_id="$chat_id" config="$config" mi_num_str="$mi_num_str" new_qw_num="$new_qw_num
 local i1=0
 local str_col1=0
 local test1=""
-str_col1=$(grep -c "" $qchat_file)
-logger "roborob to-config str_col1="$str_col1
-rm -f $qchat_file1
-touch $qchat_file1
+local config1=$fhome"config1_tmp.txt"
+
+str_col1=$(grep -c "" $config)
+logger "to-config str_col1="$str_col1
+rm -f $config1
+touch $config1
 
 for (( i1=1;i1<=$str_col1;i1++)); do
-test1=$(sed -n $i1"p" $qchat_file)
-logger "roborob to-config i1="$i1" test1="$test1
-if [ "$i1" -eq "$mi_num" ]; then
-	echo $chat_id":"$req >> $qchat_file1
-	logger "roborob to-config add "$chat_id":"$req" i1="$i1" test1="$test1
+test1=$(sed -n $i1"p" $config)
+logger "to-config i1="$i1" test1="$test1
+if [ "$i1" -eq "$mi_num_str" ]; then
+	echo $chat_id":"$new_qw_num >> $config1
+	logger "to-config add "$chat_id":"$new_qw_num" i1="$i1" test1="$test1
 else
-	echo $test1 >> $qchat_file1
-	logger "roborob to-config add i1="$i1" test1="$test1
+	echo $test1 >> $config1
+	logger "to-config add i1="$i1" test1="$test1
 fi
 done
-cp -f $qchat_file1 $qchat_file
+cp -f $config1 $config
 }
 
 
 
 del-to-config ()
 {
-logger "roborob del-to-config mi_num="$mi_num
+logger "del-to-config mi_num_str="$mi_num_str
 local i2=0
 local str_col2=0
 local test2=""
-str_col2=$(grep -c "" $qchat_file)
-logger "roborob del-to-config str_col2="$str_col2
-rm -f $qchat_file1
-touch $qchat_file1
+local config1=$fhome"config1_tmp.txt"
+
+str_col2=$(grep -c "" $config)
+logger "del-to-config str_col2="$str_col2
+rm -f $config1
+touch $config1
 
 for (( i2=1;i2<=$str_col2;i2++)); do
-test2=$(sed -n $i2"p" $qchat_file)
-logger "roborob del-to-config i2="$i2" test2="$test2
-if [ "$i2" -ne "$mi_num" ]; then
-	echo $test2 >> $qchat_file1
-	logger "roborob del-to-config add test2="$test2
+test2=$(sed -n $i2"p" $config)
+logger "del-to-config i2="$i2" test2="$test2
+if [ "$i2" -ne "$mi_num_str" ]; then
+	echo $test2 >> $config1
+	logger "del-to-config add test2="$test2
 fi
 done
 
-cp -f $qchat_file1 $qchat_file
+cp -f $config1 $config
 }
 
 
@@ -105,10 +114,10 @@ local min_col_str=0
 local max_col_str=0
 go2="ok"
 
-min_col_str=$(sed -n $req"p" $fhome"otv_min_str_col.txt" | tr -d '\r')
-max_col_str=$(sed -n $req"p" $fhome"otv_max_str_col.txt" | tr -d '\r')
-logger "roborob min-col-str min_col_str="$min_col_str"< max_col_str="$max_col_str"<"
-logger "ksvs="$ksvs"<"
+min_col_str=$1
+max_col_str=$2
+logger "min-col-str min_col_str="$min_col_str"< max_col_str="$max_col_str"<"
+logger "min-col-str ksvs="$ksvs"<"
 
 if [ "$ksvs" -lt "$min_col_str" ]; then
 	go2="no"
@@ -125,77 +134,58 @@ fi
 
 }
 
-yes-or-no ()
+check_mail_in_txt ()
 {
-go1="k"
+go4=""
+echo $text > $fhome"text_tmp.txt"
 
-if [ "$(echo $text | grep -c "да" )" -gt "0" ] || [ "$(echo $text | grep -c "Да" )" -gt "0" ] || [ "$(echo $text | grep -c "ДА" )" -gt "0" ]; then
-	go1="yes"
-fi
-if [ "$(echo $text | grep -c "нет" )" -gt "0" ] || [ "$(echo $text | grep -c "Нет" )" -gt "0" ] || [ "$(echo $text | grep -c "НЕТ" )" -gt "0" ]; then
-	if [ "$go1" == "yes" ]; then
-		go1="k"
-	else
-		go1="no"
-	fi
-fi
-
-if [ "$go1" == "k" ]; then
-	echo "Только да или нет, пожалуйста" > $fhome"yon.txt"
-	otv=$fhome"yon.txt"
+if [ "$(cat $fhome"text_tmp.txt" | grep -c "@" )" -gt "0" ]; then
+	go4="ok"
+else
+	echo "Вы не указали адрес электронной почты, повторите пожалуйста ввод." > $fhome"check_mail_in_txt.txt"
+	otv=$fhome"check_mail_in_txt.txt"
 	send;
 fi
-logger "roborob yes-or-no go1="$go1
+logger "check_mail_in_txt go4="$go4
 }
+
+
 
 next-qwery ()
 {
-logger "roborob next-qwery req="$req" chat_id="$chat_id
-echo $(sed -n $req"p" $fhome"questions.txt" | tr -d '\r') >> $fhome"/qw/"$chat_id".txt"
-echo $text >> $fhome"/qw/"$chat_id".txt"
-req=$((req+1))
+logger "next-qwery new_qw_num="$new_qw_num" chat_id="$chat_id
+echo "----" >> $fhome"/qw/"$chat_id".txt"
+cat $fhome"questions/questions"$qw_num".txt" >> $fhome"/qw/"$chat_id".txt"		#запишем предыдущий вопрос
+echo "----" >> $fhome"/qw/"$chat_id".txt"
+echo $text >> $fhome"/qw/"$chat_id".txt"										#запишем предыдущий ответ
 to-config
-echo $(sed -n $req"p" $fhome"questions.txt" | tr -d '\r') > $fhome"qw.txt"
-otv=$fhome"qw.txt"
+#cat $fhome"questions/questions"$new_qw_num".txt" >> $fhome"/qw/"$chat_id".txt"
+otv=$fhome"questions/questions"$new_qw_num".txt"
 send;
 }
 
-after-yes-or-no ()
+
+end_of_the_movie ()
 {
-logger "roborob after-yes-or-no req="$req" chat_id="$chat_id
-if [ "$go1" == "yes" ]; then
-	if [ "$req" -eq "1" ]; then
-		next-qwery;
-	fi
-	if [ "$req" -eq "3" ]; then
-		echo $(sed -n $req"p" $fhome"questions.txt" | tr -d '\r') >> $fhome"/qw/"$chat_id".txt"
-		echo $text >> $fhome"/qw/"$chat_id".txt"
-		del-to-config
-		mv -f $fhome"/qw/"$chat_id".txt" $fhome"/qw_old/"$chat_id".txt"
-		otv=$fhome"blagodarochka.txt"
-		send;
-	fi
-fi
-if [ "$go1" == "no" ]; then
-	if [ "$req" -eq "1" ]; then
-		del-to-config
-		echo "Рекомендуем обратиться и вернуться к нам с обратной связью по результату обращения." > $fhome"qw.txt"
-		otv=$fhome"qw.txt"
-		send;
-	fi
-	if [ "$req" -eq "3" ]; then
-		next-qwery;
-	fi
-fi
+logger "end_of_the_movie"
+echo "----" >> $fhome"/qw/"$chat_id".txt"
+username=$(cat $fhome"in.txt" | jq ".result[$i].message.chat.username" | sed 's/\"//g' | tr -d '\r')
+echo "username="$username >> $fhome"/qw/"$chat_id".txt"
+echo "chat="$chat_id >> $fhome"/qw/"$chat_id".txt"
+echo $fhome"/qw_old/"$chat_id"_"$date1".txt" >> $fhome"/qw/"$chat_id".txt"
+mv -f $fhome"/qw/"$chat_id".txt" $fhome"/qw_old/"$chat_id"_"$date1".txt"
+del-to-config
 }
 
 
 roborob ()  	
 {
 local go=""
+#local go3=""
 local str_col3=0
-date1=$(date '+ %d.%m.%Y %H:%M:%S')
-[ "$lev_log" == "1" ] && logger "text="$text
+date1=$(date '+%d.%m.%Y_%H-%M-%S')
+date2=$(date '+%d%m%Y%H%M%S')
+[ "$lev_log" == "1" ] && IFS=$'\x10' && logger "text="$text && unset IFS
 otv=""
 
 if [ "$text" = "/help" ] ; then
@@ -206,18 +196,28 @@ if [ "$text" = "/help" ] ; then
 fi
 
 if [ "$text" = "/start" ] ; then
-	mi_num=$(cat $qchat_file | grep -n $chat_id":" | awk -F":" '{print $1}' | tr -d '\r')
-	logger "roborob start, chat_id="$chat_id" mi_num="$mi_num"<==================================="
-	rm -f $fhome"start1.txt"
-	if ! [[ $mi_num =~ ^[0-9]+$ ]]; then
+	qw_num=$(grep $chat_id":" $qchat_file | awk -F":" '{print $2}' | tr -d '\r')
+	logger "roborob start, chat_id="$chat_id" qw_num="$qw_num"<==================================="
+	rm -f $fhome"qw/"$chat_id".txt"
+	if [ -z "$qw_num" ]; then
 		echo $chat_id":1" >> $qchat_file
-		rm -f $fhome"/qw/"$chat_id".txt"
 		username=$(cat $fhome"in.txt" | jq ".result[$i].message.chat.username" | sed 's/\"//g' | tr -d '\r')
-		logger "roborob start, username="$username" mi_num="$mi_num
-		echo "Здравствуйте "$username"!" > $fhome"start1.txt"
+		logger "roborob username="$username
+		#echo "Здравствуйте "$username"!" > $fhome"start1.txt"
+	else
+		#почистим все
+		mi_num_str=$(grep -n $chat_id":" $qchat_file | awk -F":" '{print $1}' | tr -d '\r')
+		new_qw_num="1"
+		config=$qchat_file
+		to-config;
+		#чистим 1_1_1_2.txt
+		if [ "$(grep -c $chat_id":" $fhome"1_1_1_2.txt")" -gt "0" ]; then
+			mi_num_str1=$(grep -n $chat_id":" $fhome"1_1_1_2.txt" | awk -F":" '{print $1}' | tr -d '\r')
+			del-to-config-attempts;
+		fi
 	fi
-	echo $(sed -n 1"p" $fhome"questions.txt" | tr -d '\r') >> $fhome"start1.txt"
-	otv=$fhome"start1.txt"
+	rm -f $fhome"find_db/"$chat_id".txt"
+	otv=$fhome"questions/questions1.txt"
 	send;
 	go="go"
 fi
@@ -225,41 +225,182 @@ fi
 #клиент что-то пишет
 if [ -z "$go" ]; then
 	logger "roborob writing, chat_id="$chat_id"<==================================="
-	mi_num=$(cat $qchat_file | grep -n $chat_id":" | awk -F":" '{print $1}' | tr -d '\r')
-	if ! [ -z "$mi_num" ]; then
-		req=$(sed -n $mi_num"p" $qchat_file| awk -F":" '{print $2}' | tr -d '\r')
-		logger "roborob OK qchat_file mi_num="$mi_num" req="$req
+	mi_num_str=$(cat $qchat_file | grep -n $chat_id":" | awk -F":" '{print $1}' | tr -d '\r')
+	if ! [ -z "$mi_num_str" ]; then
+		qw_num=$(sed -n $mi_num_str"p" $qchat_file| awk -F":" '{print $2}' | tr -d '\r')
+		logger "roborob OK qchat_file mi_num_str="$mi_num_str" qw_num="$qw_num"<"
 		
-		if [ "$req" -eq "$col_qw" ]; then	#последний вопрос
-			min-col-str;
+		if [ "$qw_num" == "1" ]; then
+			min-col-str 1 2
 			if [ "$go2" == "ok" ]; then
-			echo $(sed -n $req"p" $fhome"questions.txt" | tr -d '\r') >> $fhome"/qw/"$chat_id".txt"
-			echo $text >> $fhome"/qw/"$chat_id".txt"
-			echo "chat="$chat_id >> $fhome"/qw/"$chat_id".txt"
-			username=$(cat $fhome"in.txt" | jq ".result[$i].message.chat.username" | sed 's/\"//g' | tr -d '\r')
-			echo "username="$username >> $fhome"/qw/"$chat_id".txt"
-			
-			del-to-config
-			otv=$fhome"blagodarochka2.txt"
-			send;
-			#zammad
-			zammad-create-ticket;
-			mv -f $fhome"/qw/"$chat_id".txt" $fhome"/qw_old/"$chat_id".txt"
+				if [ "$text" == "1" ] || [ "$text" == "2" ] || [ "$text" == "3" ]; then
+					new_qw_num="1_"$text
+					config=$qchat_file
+					next-qwery;
+					#go3="ok"
+				fi
+			fi
+		fi
+		if [ "$qw_num" == "1_1" ]; then
+			min-col-str 1 2
+			if [ "$go2" == "ok" ]; then
+				if [ "$text" == "1" ]; then
+					new_qw_num="1_1_1"
+					config=$qchat_file
+					next-qwery;
+					#go3="ok"
+				fi
+				if [ "$text" == "2" ]; then		#кАнец фильмА
+					new_qw_num="1_1_2"
+					config=$qchat_file
+					next-qwery;
+					end_of_the_movie;
+					#go3="ok"
+				fi
 			fi
 		fi
 		
-		if [ "$(cat $fhome"otv_yes_or_no.txt"| grep -c $req":" | tr -d '\r')" -gt "0" ]; then
-			if [ "$req" -ne "$col_qw" ]; then
-				yes-or-no;
-				after-yes-or-no;
+		if [ "$qw_num" == "1_2" ]; then
+			min-col-str 1 2
+			if [ "$go2" == "ok" ]; then
+				if [ "$text" == "1" ]; then		#кАнец фильмА
+					new_qw_num="1_2_1"
+					config=$qchat_file
+					next-qwery;
+					end_of_the_movie;
+					#go3="ok"
+				fi
+				if [ "$text" == "2" ]; then
+					new_qw_num="1_2_2"
+					config=$qchat_file
+					next-qwery;
+					#go3="ok"
+				fi
 			fi
-		else
-			if [ "$req" -ne "$col_qw" ]; then
-				min-col-str;
-				[ "$go2" == "ok" ] && next-qwery;
+		fi
+		if [ "$qw_num" == "1_2_2" ]; then
+			min-col-str 4 300
+			if [ "$go2" == "ok" ]; then
+				check_mail_in_txt;
+				if [ "$go4" == "ok" ]; then		#кАнец фильмА
+					new_qw_num="1_2_2_1"
+					config=$qchat_file
+					next-qwery;
+					end_of_the_movie;
+					title="Help "$username" chat:"$chat_id
+					zammad-create-ticket;
+					#go3="ok"
+				fi
 			fi
 		fi
 		
+		if [ "$qw_num" == "1_3" ]; then
+			min-col-str 4 300
+			if [ "$go2" == "ok" ]; then
+				check_mail_in_txt;
+				if [ "$go4" == "ok" ]; then		#кАнец фильмА
+					new_qw_num="1_3_1"
+					config=$qchat_file
+					next-qwery;
+					end_of_the_movie;
+					MADDR=$(sed -n 20"p" $fhome"sett.conf" | tr -d '\r')
+					MSUBJ="Вопрос-Другое-131-MIxVel_fbp_bot  "$username" chat:"$chat_id
+					MBODY=$(cat $fhome"/qw_old/"$chat_id"_"$date1".txt" | sed 's,$,\\n,'| sed 's/\"//g' | tr -d '\r\n')
+					smail;
+					#go3="ok"
+				fi
+			fi
+		fi
+		
+		if [ "$qw_num" == "1_1_1" ]; then
+			min-col-str 1 2
+			if [ "$go2" == "ok" ]; then
+				if [ "$text" == "1" ] || [ "$text" == "2" ]; then
+					new_qw_num="1_1_1_"$text
+					config=$qchat_file
+					next-qwery;
+					#go3="ok"
+				fi
+			fi
+		fi
+		if [ "$qw_num" == "1_1_1_1" ]; then		#1-5
+			min-col-str 1 2
+			if [ "$go2" == "ok" ]; then
+				if [ "$text" == "1" ] || [ "$text" == "2" ] || [ "$text" == "3" ] || [ "$text" == "4" ]; then
+					new_qw_num="1_1_1_1_2"
+					config=$qchat_file
+					next-qwery;
+					#go3="ok"
+				fi
+				if [ "$text" -eq "5" ]; then
+					new_qw_num="1_1_1_1_1"
+					config=$qchat_file
+					next-qwery;
+					end_of_the_movie;
+					title="Review-5 "$username" chat:"$chat_id
+					zammad-create-ticket;
+					#go3="ok"
+				fi
+			fi
+		fi
+		if [ "$qw_num" == "1_1_1_1_2" ]; then
+			min-col-str 4 300
+			if [ "$go2" == "ok" ]; then			#кАнец фильмА
+				new_qw_num="1_1_1_1_2_1"
+				config=$qchat_file
+				next-qwery;
+				end_of_the_movie;
+				title="Review "$username" chat:"$chat_id
+				zammad-create-ticket;
+				#go3="ok"
+			fi
+		fi
+		
+		if [ "$qw_num" == "1_1_1_2" ]; then		#----------------------------------поиск по номеру-------------------
+			min-col-str 6 42
+			if [ "$go2" == "ok" ]; then
+				if ! [ -f $fhome"find_db/"$chat_id".txt" ] && [ "$(grep -c $chat_id $fhome"1_1_1_2.txt")" -eq "0" ]; then
+					otv=$fhome"wait"$((RANDOM%3+1))".txt"
+					send;
+					find_db;
+					#go3="ok"
+				fi
+			fi
+		fi
+		if [ "$qw_num" == "1_1_1_2_2" ]; then		#----------------------------попытки------------------
+			min-col-str 6 42
+			if [ "$go2" == "ok" ]; then
+				if ! [ -f $fhome"find_db/"$chat_id".txt" ] && ! [ -f $fhome"find_db_otv1/"$chat_id".txt" ]; then
+					otv=$fhome"wait"$((RANDOM%3+1))".txt"
+					send;
+					find_db;
+					#go3="ok"
+				fi
+			fi
+		fi
+		if [ "$qw_num" == "1_1_1_2_1" ]; then
+			min-col-str 4 400
+			if [ "$go2" == "ok" ]; then
+				check_mail_in_txt;
+				if [ "$go4" == "ok" ]; then		#кАнец фильмА
+					new_qw_num="1_1_1_2_1_1"
+					config=$qchat_file
+					next-qwery;
+					end_of_the_movie;
+					title="Help "$username" chat:"$chat_id
+					zammad-create-ticket;
+					zapushgateway;
+					#go3="ok"
+				fi
+			fi
+		fi
+		
+
+		#if [ -z "$go3" ]; then
+			#+_1
+			#min-col-str 1 2
+			#[ "$go2" == "ok" ] && new_qw_num=$qw_num"_1" && next-qwery;
+		#fi
 		
 	fi
 fi
@@ -268,39 +409,119 @@ fi
 logger "roborob otv="$otv
 }
 
+
+zapushgateway ()
+{
+count=$(sed -n 1"p" $fhome"count_z.txt" | tr -d '\r')
+count=$((count+1))
+echo $count > $fhome"count_z.txt"
+logger "zapushgateway count="$count
+}
+
+
+
+find_db ()
+{
+
+find1=$text
+constructor_psql;
+echo $text > $fhome"find_db/"$chat_id".txt"
+rm -f $fhome"find_db_otv/"$chat_id".txt"
+
+#заносим инфу о 1 попытках $fhome"1_1_1_2.txt"
+mi_num_str1=$(grep -n $chat_id":" $fhome"1_1_1_2.txt" | awk -F":" '{print $1}' | tr -d '\r')
+if [ -z "$mi_num_str1" ]; then
+	#первак
+	echo $chat_id":1" >> $fhome"1_1_1_2.txt"
+	logger "find_db new 1_1_1_2 "$chat_id":1"
+fi
+logger "find_db chat_id="$chat_id" 1_1_1_2 mi_num_str1="$mi_num_str1"< find1="$find1
+
+$fhome"find_db_sh/"$chat_id".sh" &
+$fhome"ntracker.sh" $chat_id &
+}
+
+
+
+
+constructor_psql ()
+{
+logger "constructor_psql start"
+host=$(sed -n 22"p" $fhome"sett.conf" | tr -d '\r')
+port=$(sed -n 23"p" $fhome"sett.conf" | tr -d '\r')
+hostp=$host":"$port
+db=$(sed -n 24"p" $fhome"sett.conf" | tr -d '\r')
+user=$(sed -n 25"p" $fhome"sett.conf" | tr -d '\r')
+pass=$(sed -n 26"p" $fhome"sett.conf" | tr -d '\r')
+
+cp -f $fhome"sendmail_tmp.sh" $fhome"find_db_sh/"$chat_id".sh"
+
+echo "PID=\$\$" >> $fhome"find_db_sh/"$chat_id".sh"
+echo "echo \$PID > "$fhome"find_db_pid/"$chat_id".pid" >> $fhome"find_db_sh/"$chat_id".sh"
+
+echo "echo \"BookingRefs:\" > "$fhome"find_db_otv/"$chat_id"_1.txt" >> $fhome"find_db_sh/"$chat_id".sh"
+echo "psql \"postgresql://"$user":"$pass"@"$hostp"/"$db"\" -c \"SELECT * FROM \\\"BookingRefs\\\" WHERE \\\"BookingId\\\"='"$find1"';\" >> "$fhome"find_db_otv/"$chat_id"_1.txt" >> $fhome"find_db_sh/"$chat_id".sh"
+echo "echo \"Orders:\" > "$fhome"find_db_otv/"$chat_id"_2.txt" >> $fhome"find_db_sh/"$chat_id".sh"
+echo "psql \"postgresql://"$user":"$pass"@"$hostp"/"$db"\" -c \"SELECT * FROM \\\"Orders\\\" WHERE \\\"MixvelId\\\"='"$find1"';\" >> "$fhome"find_db_otv/"$chat_id"_2.txt" >> $fhome"find_db_sh/"$chat_id".sh"
+echo "echo \"Tickets:\" > "$fhome"find_db_otv/"$chat_id"_3.txt" >> $fhome"find_db_sh/"$chat_id".sh"
+echo "psql \"postgresql://"$user":"$pass"@"$hostp"/"$db"\" -c \"SELECT * FROM \\\"Tickets\\\" WHERE \\\"Number\\\"='"$find1"';\" >> "$fhome"find_db_otv/"$chat_id"_3.txt" >> $fhome"find_db_sh/"$chat_id".sh"
+
+echo "rm -f "$fhome"find_db_pid/"$chat_id".pid" >> $fhome"find_db_sh/"$chat_id".sh"
+
+cd $fhome"find_db_sh/"
+perl -pi -e "s/\r\n/\n/" ./*.sh
+chmod +rx ./*.sh
+cd $fhome
+}
+
+
+smail()
+{
+if ! [ "$smtp_hostname" == "" ] && ! [ "$smtp_sport" == "" ] && ! [ "$smtp_user" == "" ] && ! [ "$smtp_pass" == "" ]; then
+	logger "smail"
+	cp -f $fhome"sendmail_tmp.sh" $fhome"sendmail.sh"
+	
+		logger "smail send mail to "$MADDR
+		echo "su monitoring -c 'cd; echo \""$MBODY"\" | mail -s \""$MSUBJ"\" "$MADDR"' -s /bin/bash" >> $fhome"sendmail.sh"
+	
+	chmod +rx $fhome"sendmail.sh"
+	$fhome"sendmail.sh" 2>&1 &
+
+else
+	logger "smail FAIL"
+fi
+}
+
+
 zammad-create-ticket ()
 {
-local title=""
 local subject=""
 local body=""
-
 logger "roborob zammad-create-ticket chat_id="$chat_id
-cp -f $fhome"0.sh" $fhome$chat_id".sh"
-title="Help "$(sed -n 10"p" $fhome"/qw/"$chat_id".txt"| sed 's/\"//g' | tr -d '\r')" chat:"$chat_id
-subject=$(sed -n 5"p" $fhome"sett.conf" | tr -d '\r')
-body=$(cat $fhome"/qw/"$chat_id".txt" | sed 's,$,\\n,'| sed 's/\"//g' | tr -d '\r\n')
 
-echo "curl -k -s -m 13 --location '"$zammad_endpoint"' \\" >> $fhome$chat_id".sh"
-echo "--header 'Content-Type: application/json' \\" >> $fhome$chat_id".sh"
-echo "--header 'Authorization: "$zammad_btocken"' \\" >> $fhome$chat_id".sh"
-echo "--data-raw '{" >> $fhome$chat_id".sh"
-echo "   \"title\": \""$title"\"," >> $fhome$chat_id".sh"
-echo "   \"group\": \"Support\"," >> $fhome$chat_id".sh"
-echo "   \"customer\": \"tg_fbp_bot@yandex.ru\"," >> $fhome$chat_id".sh"
-echo "   \"article\": {" >> $fhome$chat_id".sh"
-echo "      \"subject\": \""$subject"\"," >> $fhome$chat_id".sh"
-echo "      \"body\": \""$body"\"," >> $fhome$chat_id".sh"
-echo "      \"type\": \"note\"," >> $fhome$chat_id".sh"
-echo "      \"internal\": false" >> $fhome$chat_id".sh"
-echo "   }" >> $fhome$chat_id".sh"
-echo "}' | jq '.' > "$fhome"zammad/otv_zct.txt" >> $fhome$chat_id".sh"
+cp -f $fhome"0.sh" $fhome$chat_id"_"$date2".sh"
+#title="Help "$username" chat:"$chat_id
+subject=$fhome"/qw_old/"$chat_id"_"$date1".txt"
+body=$(cat $fhome"/qw_old/"$chat_id"_"$date1".txt" | sed 's,$,\\n,'| sed 's/\"//g' | tr -d '\r\n')
 
-chmod +rx $fhome$chat_id".sh"
-mv -f $fhome$chat_id".sh" $fhome"zammad/"$chat_id".sh"
+echo "curl -k -s -m 13 --location '"$zammad_endpoint"' \\" >> $fhome$chat_id"_"$date2".sh"
+echo "--header 'Content-Type: application/json' \\" >> $fhome$chat_id"_"$date2".sh"
+echo "--header 'Authorization: "$zammad_btocken"' \\" >> $fhome$chat_id"_"$date2".sh"
+echo "--data-raw '{" >> $fhome$chat_id"_"$date2".sh"
+echo "   \"title\": \""$title"\"," >> $fhome$chat_id"_"$date2".sh"
+echo "   \"group\": \"Support\"," >> $fhome$chat_id"_"$date2".sh"
+echo "   \"customer\": \""$customer"\"," >> $fhome$chat_id"_"$date2".sh"
+echo "   \"article\": {" >> $fhome$chat_id"_"$date2".sh"
+echo "      \"subject\": \""$subject"\"," >> $fhome$chat_id"_"$date2".sh"
+echo "      \"body\": \""$body"\"," >> $fhome$chat_id"_"$date2".sh"
+echo "      \"type\": \"note\"," >> $fhome$chat_id"_"$date2".sh"
+echo "      \"internal\": false" >> $fhome$chat_id"_"$date2".sh"
+echo "   }" >> $fhome$chat_id"_"$date2".sh"
+echo "}' | jq '.' > "$fhome"zammad/otv_zct.txt" >> $fhome$chat_id"_"$date2".sh"
 
-#$fhome"zammad/"$chat_id".sh"
-#zammad_numtick=$(cat $fhome"zammad/otv_zct.txt" | jq '.number' | sed 's/\"//g' | sed 's/^[ \t]*//;s/[ \t]*$//' | tr -d '\r')
-#в очередь отправки
+chmod +rx $fhome$chat_id"_"$date2".sh"
+mv -f $fhome$chat_id"_"$date2".sh" $fhome"zammad/"$chat_id"_"$date2".sh"
+
 }
 
 
@@ -408,7 +629,7 @@ parce ()
 {
 [ "$lev_log" == "1" ] && logger "parce"
 mi=0
-date1=$(date '+ %d.%m.%Y %H:%M:%S')
+#date1=$(date '+ %d.%m.%Y %H:%M:%S')
 mi_col=$(cat $cuf"in.txt" | grep -c update_id | tr -d '\r')
 logger "parce col mi_col="$mi_col
 upd_id=$(sed -n 1"p" $fhome"lastid.txt" | tr -d '\r')
@@ -453,6 +674,81 @@ fi
 }
 
 
+del-to-config-attempts ()
+{
+logger "del-to-config-attempts mi_num_str1="$mi_num_str1
+#удаляем из попыток
+config=$fhome"1_1_1_2.txt"
+mi_num_str=$mi_num_str1
+del-to-config;
+rm -f $fhome"find_db_otv/"$chat_id".txt"
+}
+
+
+carriage_return ()
+{
+logger "carriage_return start"
+
+for chat_id in $(cat $fhome"find_db_otv1.txt" | grep -v \#|tr -d '\r')
+do
+logger "find 1_1_1_2 otvet ================ chat_id="$chat_id
+if [ "$(grep -c "ERR: " $fhome"find_db_otv1/"$chat_id".txt")" -gt "0" ]; then
+	logger "find 1_1_1_2 chat_id="$chat_id" FAIL"
+	mi_num_str1=$(cat $fhome"1_1_1_2.txt" | grep -n $chat_id":" | awk -F":" '{print $1}' | tr -d '\r')
+	qw_num1=$(sed -n $mi_num_str1"p" $fhome"1_1_1_2.txt" | awk -F":" '{print $2}' | tr -d '\r')
+	logger "find 1_1_1_2 mi_num_str1="$mi_num_str1" qw_num1="$qw_num1
+	
+	if [ "$qw_num1" -eq "3" ]; then
+		#кАнец фильмА
+		mi_num_str=$(grep -n $chat_id":" $qchat_file | awk -F":" '{print $1}' | tr -d '\r')
+		qw_num="1_1_1_2_2";new_qw_num="1_1_1_2_2_2"; config=$qchat_file; text="";
+		#IFS=$'\x10'; text=$(cat $fhome"find_db_otv1/"$chat_id".txt"); unset IFS;
+		logger "find 1_1_1_2 new_qw_num="$new_qw_num
+		next-qwery;
+		cat $fhome"find_db_otv1/"$chat_id".txt" >> $fhome"/qw/"$chat_id".txt"
+		date1=$(date '+%d.%m.%Y_%H-%M-%S')
+		end_of_the_movie;
+		#удаляем из попыток
+		del-to-config-attempts;
+	else
+		#еще разок 1_1_1_2.txt
+		new_qw_num=$((qw_num1+1))
+		mi_num_str=$mi_num_str1
+		config=$fhome"1_1_1_2.txt"
+		to-config;
+		#ответ и след попытка
+		qw_num="1_1_1_2"; new_qw_num="1_1_1_2_2"; config=$qchat_file; text="";
+		#IFS=$'\x10'; text=$(cat $fhome"find_db_otv1/"$chat_id".txt"); unset IFS;
+		mi_num_str=$(grep -n $chat_id":" $qchat_file | awk -F":" '{print $1}' | tr -d '\r')
+		logger "find 1_1_1_2 new_qw_num="$new_qw_num
+		next-qwery;
+		cat $fhome"find_db_otv1/"$chat_id".txt" >> $fhome"/qw/"$chat_id".txt"
+	fi
+	
+else
+	logger "find 1_1_1_2 chat_id="$chat_id" OK"
+	#следующий вопрос
+	qw_num="1_1_1_2"; new_qw_num="1_1_1_2_1"; config=$qchat_file; text="";
+	#IFS=$'\x10'; text=$(cat $fhome"find_db_otv1/"$chat_id".txt"); unset IFS;
+	mi_num_str=$(grep -n $chat_id":" $qchat_file | awk -F":" '{print $1}' | tr -d '\r')
+	next-qwery;
+	#ответ и поиск в лог чата
+	cat $fhome"find_db_otv1/"$chat_id".txt" >> $fhome"/qw/"$chat_id".txt"
+	#удаляем из попыток
+	del-to-config-attempts;
+fi
+#тут надо еще по логу в чат с попытками подумать
+
+rm -f $fhome"find_db_otv1/"$chat_id".txt"
+done
+}
+
+
+
+
+
+
+
 
 
 
@@ -463,7 +759,6 @@ logger ""
 logger "start fbp_bot "$bui" "$ver" lev_log="$lev_log
 Init2;
 starten_furer;
-kkik=0
 
 while true
 do
@@ -474,10 +769,11 @@ input;
 [ "$tinp_ok" -gt "$tinp_ok1" ] && parce;
 [ "$i" -gt "50" ] && upd_id1=$upd_id
 
-kkik=$(($kkik+1))
-if [ "$kkik" -ge "$progons" ]; then
-	Init2
-fi
+
+#возврат каретки
+ls $fhome"find_db_otv1/" | sed 's/\.\///g' | sed 's/\.txt//g' > $fhome"find_db_otv1.txt"
+[ "$(grep -c "" $fhome"find_db_otv1.txt")" -gt "0" ] && carriage_return;
+
 
 done
 rm -f $fPID
