@@ -37,7 +37,7 @@ progons=$(sed -n 6"p" $fhome"sett.conf" | tr -d '\r')
 
 kkik=0
 
-#integrity;		#только под рутом(
+integrity;		#только под рутом(
 }
 
 
@@ -164,9 +164,9 @@ echo $text
 
 if ! [ -z "$text" ]; then
 	if [ -z "$proxy" ]; then
-		curl -k -m 8 -L -X POST https://api.telegram.org/bot$token/sendMessage -d disable_notification=$muter -d chat_id="$chat_id" -d 'parse_mode=HTML' --data-urlencode "text="$text 1>$fhome"out2.txt" 2>$fhome"out2_err.txt"
+		curl -k -m 8 -L -X POST https://api.telegram.org/bot$token/sendMessage -d chat_id="$chat_id" -d 'parse_mode=HTML' --data-urlencode "text="$text 1>$fhome"out2.txt" 2>$fhome"out2_err.txt"
 	else
-		curl -k -m 8 --proxy $proxy -L -X POST https://api.telegram.org/bot$token/sendMessage  -d disable_notification=$muter -d chat_id="$chat_id" -d 'parse_mode=HTML' --data-urlencode "text="$text 1>$fhome"out2.txt" 2>$fhome"out2_err.txt"
+		curl -k -m 8 --proxy $proxy -L -X POST https://api.telegram.org/bot$token/sendMessage -d chat_id="$chat_id" -d 'parse_mode=HTML' --data-urlencode "text="$text 1>$fhome"out2.txt" 2>$fhome"out2_err.txt"
 	fi
 fi
 
